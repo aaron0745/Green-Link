@@ -3,7 +3,6 @@ node_modules/
 .pnp
 .pnp.js
 bun.lockb
-capacitor.config.ts
 
 # Testing
 coverage/
@@ -11,12 +10,11 @@ coverage/
 # Production / Build Output
 dist/
 build/
-android/
 
 # Vite Cache
 .vite/
 
-# Environment Variables and Local Config
+# Environment Variables and Local Config (NEVER COMMIT SECRETS)
 .env
 .env.local
 .env.*.local

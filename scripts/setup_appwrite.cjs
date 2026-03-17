@@ -108,6 +108,7 @@ async function setup() {
             await createAttributeIfNotExists(databaseId, cId, 'avatar', 'string', 10, false);
             await createAttributeIfNotExists(databaseId, cId, 'lat', 'float', null, false);
             await createAttributeIfNotExists(databaseId, cId, 'lng', 'float', null, false);
+            await createAttributeIfNotExists(databaseId, cId, 'lastSeen', 'string', 50, false);
         }
 
         // 3. Collection Logs

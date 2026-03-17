@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Green-link</string>
+    <string name="title_activity_main">Green-link</string>
+    <string name="package_name">com.greenlink.app</string>
+    <string name="custom_url_scheme">com.greenlink.app</string>
+</resources>

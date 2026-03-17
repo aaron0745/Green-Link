@@ -486,7 +486,11 @@ export const api = {
             DATABASE_ID,
             COLLECTORS_COLLECTION_ID,
             collectorId,
-            { lat, lng }
+            { 
+                lat, 
+                lng,
+                lastSeen: new Date().toISOString()
+            }
         );
     }
 };

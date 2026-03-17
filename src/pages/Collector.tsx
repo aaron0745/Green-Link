@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
 import { CollectorManagement } from "@/components/CollectorManagement";
 
@@ -61,7 +61,7 @@ export default function CollectorPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
   const lastErrorShownRef = useRef<number>(0);
   const qrcodeRegionId = "qrcode-reader";
 
@@ -71,33 +71,35 @@ export default function CollectorPage() {
     mutationFn: (vars: { id: string, lat: number, lng: number }) => api.updateCollectorLocation(vars.id, vars.lat, vars.lng),
   });
 
-  // Track real-time location
+  // Track location on a fixed interval (15 mins) to optimize database requests
   useEffect(() => {
     if (!selectedCollectorId || role !== 'collector') return;
 
-    if ("geolocation" in navigator) {
-      const watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          console.log(`[GEO] Updating location for ${selectedCollectorId}: ${latitude}, ${longitude}`);
-          updateLocationMutation.mutate({ 
-            id: selectedCollectorId, 
-            lat: latitude, 
-            lng: longitude 
-          });
-        },
-        (error) => {
-          console.error("[GEO] Error tracking location:", error);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 30000,
-        }
-      );
+    const updateLocation = () => {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log(`[GEO] 15min Update for ${selectedCollectorId}: ${latitude}, ${longitude}`);
+            updateLocationMutation.mutate({ 
+              id: selectedCollectorId, 
+              lat: latitude, 
+              lng: longitude 
+            });
+          },
+          (error) => console.error("[GEO] Error:", error),
+          { enableHighAccuracy: true }
+        );
+      }
+    };
 
-      return () => navigator.geolocation.clearWatch(watchId);
-    }
+    // 1. Initial update when component mounts
+    updateLocation();
+
+    // 2. Fixed interval (30 minutes)
+    const intervalId = setInterval(updateLocation, 30 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
   }, [selectedCollectorId, role]);
 
   useEffect(() => {
@@ -419,32 +421,25 @@ export default function CollectorPage() {
                   <div className="mt-auto pt-2">
                     {/* Inline QR Scanner for THIS specific card */}
                     {isCurrentlyScanning && (
-                      <div className="mb-3 p-2 bg-black rounded-lg overflow-hidden border border-primary/30">
-                        <div id={qrcodeRegionId} className="w-full aspect-square bg-muted flex items-center justify-center text-muted-foreground relative">
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/10 flex-col gap-2">
-                            <p className="text-[10px] text-white text-center px-4">Camera Secure Context Error</p>
-                            <Button 
-                              size="sm" 
-                              variant="secondary" 
-                              className="h-7 text-[10px] bg-primary/40 hover:bg-primary/50 text-white"
-                              onClick={() => {
-                                setScannedHouseId(house.$id);
-                                setScanning(false);
-                                toast({ title: "Verified", description: `Simulated: ${house.residentName}` });
-                              }}
-                            >
-                              Simulate Scan
-                            </Button>
-                          </div>
+                      <div className="mb-3 bg-black rounded-xl overflow-hidden border-2 border-primary/50 shadow-2xl relative">
+                        <div id={qrcodeRegionId} className="w-full aspect-square bg-black">
+                          {/* The camera stream will render here directly via Html5Qrcode.start() */}
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="w-full mt-2 h-7 text-[10px] text-white hover:text-white/80" 
-                          onClick={() => setScanning(false)}
-                        >
-                          <XCircle className="h-3 w-3 mr-1" /> Cancel
-                        </Button>
+                        <div className="absolute top-2 right-2 z-10">
+                          <Button 
+                            variant="destructive" 
+                            size="icon" 
+                            className="h-8 w-8 rounded-full shadow-lg" 
+                            onClick={() => setScanning(false)}
+                          >
+                            <XCircle className="h-5 w-5" />
+                          </Button>
+                        </div>
+                        <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+                           <p className="text-[10px] text-white/70 bg-black/40 py-1 px-2 inline-block rounded-full backdrop-blur-sm">
+                             Align QR code within the frame
+                           </p>
+                        </div>
                       </div>
                     )}
 

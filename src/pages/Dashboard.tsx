@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, Home, Users, Clock, IndianRupee, MapPin, Loader2, CheckCircle2, CreditCard, QrCode, ClipboardList } from "lucide-react";
+import { Calendar as CalendarIcon, Home, Users, Clock, IndianRupee, MapPin, Loader2, CheckCircle2, CreditCard, QrCode, ClipboardList, RefreshCw } from "lucide-react";
 import { api } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -22,16 +22,21 @@ import { HouseholdManagement } from "@/components/HouseholdManagement";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 
-// Helper component to recenter map
-function MapController({ center }: { center: [number, number] | null }) {
+// Helper component to center map on workers
+function MapController({ collectors }: { collectors: any[] }) {
   const map = useMap();
+  const hasCenteredRef = useRef(false);
   
   useEffect(() => {
-    if (center && center[0] && center[1]) {
-      map.invalidateSize();
-      map.flyTo(center, 15, { duration: 1.5 });
+    if (collectors && collectors.length > 0 && !hasCenteredRef.current) {
+      const coords = collectors.filter(c => c.lat && c.lng).map(c => [c.lat, c.lng] as [number, number]);
+      if (coords.length > 0) {
+        const bounds = L.latLngBounds(coords);
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+        hasCenteredRef.current = true;
+      }
     }
-  }, [center, map]);
+  }, [collectors, map]);
 
   return null;
 }
@@ -66,58 +71,6 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedCollectors, setSelectedCollectors] = useState<Record<number, string>>({});
-  const [adminLocation, setAdminLocation] = useState<[number, number] | null>(null);
-  const [geoStatus, setGeoStatus] = useState<string>("Initializing...");
-
-  // Debug logging for Admin Location
-  useEffect(() => {
-    if (adminLocation) {
-      console.log(`%c[MAP] Admin Position Set: ${adminLocation[0]}, ${adminLocation[1]}`, "color: #2563eb; font-weight: bold;");
-    }
-  }, [adminLocation]);
-
-  useEffect(() => {
-    if (!isAdmin || !("geolocation" in navigator)) {
-      setGeoStatus(isAdmin ? "Not Supported" : "Initializing...");
-      return;
-    }
-
-    console.log(`[GEO] Secure Context: ${window.isSecureContext}`);
-    setGeoStatus("Locating...");
-
-    // Try to get a quick cached position first
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setAdminLocation([pos.coords.latitude, pos.coords.longitude]);
-        setGeoStatus(`Active (Cached)`);
-      },
-      null,
-      { enableHighAccuracy: false, timeout: 2000, maximumAge: Infinity }
-    );
-    
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const { latitude, longitude, accuracy } = pos.coords;
-        console.log(`[GEO] Admin Position: ${latitude}, ${longitude} (±${accuracy}m)`);
-        setAdminLocation([latitude, longitude]);
-        setGeoStatus(`Active (±${Math.round(accuracy)}m)`);
-      },
-      (err) => {
-        console.warn("[GEO] Geolocation Error:", err.code, err.message);
-        let msg = "Location Unavailable";
-        if (err.code === 1) msg = "Permission Denied";
-        if (err.code === 3) msg = "Timeout";
-        setGeoStatus(msg);
-      },
-      { 
-        enableHighAccuracy: false, 
-        timeout: 15000, 
-        maximumAge: 10000 
-      }
-    );
-    
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, [isAdmin]);
 
   const formatDateForQuery = (date: Date) => {
     const year = date.getFullYear();
@@ -144,23 +97,12 @@ export default function Dashboard() {
     queryFn: () => api.getCollectionLogs()
   });
 
-  const { data: collectors } = useQuery({
+  const { data: collectors, refetch: refetchCollectors } = useQuery({
     queryKey: ['collectors'],
     queryFn: () => api.getCollectors(),
     enabled: isAdmin,
-    refetchInterval: 5000, 
+    refetchInterval: 10000, // Background poll every 10s
   });
-
-  // Debug logging for Collector Locations from DB
-  useEffect(() => {
-    if (collectors) {
-      collectors.forEach((c: any) => {
-        if (c.lat && c.lng) {
-          console.log(`%c[MAP] Collector ${c.name} (W${(c.ward || []).join(",")}): ${c.lat}, ${c.lng}`, "color: #16a34a;");
-        }
-      });
-    }
-  }, [collectors]);
 
   const { data: dailyRoutes } = useQuery({
     queryKey: ['routes', formatDateForQuery(selectedDate)],
@@ -416,6 +358,14 @@ export default function Dashboard() {
 
   const wards = Array.from({ length: 8 }, (_, i) => i + 1);
 
+  const handleRefreshLocations = () => {
+    refetchCollectors();
+    toast({
+      title: "Refreshing...",
+      description: "Fetching latest worker positions from database.",
+    });
+  };
+
   return (
     <Layout>
       <div className="p-6 space-y-6">
@@ -480,65 +430,50 @@ export default function Dashboard() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-base">Live Collection Map</CardTitle>
-                  <Badge variant="outline" className={`text-[10px] ${geoStatus.includes('Active') ? 'text-primary border-primary/20 bg-primary/5' : 'text-warning border-warning/20 bg-warning/5'}`}>
-                    GPS: {geoStatus}
-                  </Badge>
+                  <Button variant="ghost" size="icon" onClick={handleRefreshLocations} title="Update all worker locations">
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[300px] w-full bg-muted rounded-lg overflow-hidden border border-border z-0">
                     <MapContainer 
-                      key={adminLocation ? 'active' : 'loading'}
-                      center={adminLocation || [10.8505, 76.2711]} 
-                      zoom={14} 
+                      center={[9.9312, 76.2673]} 
+                      zoom={11} 
                       scrollWheelZoom={false}
                       className="h-full w-full"
                     >
-                      <MapController center={adminLocation} />
+                      <MapController collectors={collectors || []} />
                       <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       />
                       
-                      {/* Admin's Location Marker */}
-                      {adminLocation && (
-                        <Marker 
-                          position={adminLocation} 
-                          icon={L.divIcon({
-                            className: "admin-marker",
-                            html: `<div style="background-color: #2563eb; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 0 10px rgba(37,99,235,0.5);">A</div>`,
-                            iconSize: [24, 24],
-                            iconAnchor: [12, 12],
-                          })}
-                        >
-                          <Popup>
-                            <div className="text-xs">
-                              <p className="font-bold">Admin Location</p>
-                              <p className="text-muted-foreground italic">You are here (Browser location)</p>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      )}
-
                       {/* Worker Locations */}
-                      {collectors?.filter((c: any) => c.lat && c.lng).map((c: any) => (
-                        <Marker 
-                          key={c.$id} 
-                          position={[c.lat, c.lng]} 
-                          icon={L.divIcon({
-                            className: "collector-marker",
-                            html: `<div style="background-color: #166534; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${c.name.substring(0, 1).toUpperCase()}</div>`,
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15],
-                          })}
-                        >
-                          <Popup>
-                            <div className="text-xs">
-                              <p className="font-bold">{c.name}</p>
-                              <p className="text-muted-foreground italic">Worker - Ward {(c.ward || []).join(",")}</p>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      ))}
+                      {collectors?.filter((c: any) => c.lat && c.lng).map((c: any) => {
+                        const lastSeenDate = c.lastSeen ? new Date(c.lastSeen) : null;
+                        const statusColor = "#16a34a"; // Consistent green for all markers
+
+                        return (
+                          <Marker 
+                            key={c.$id} 
+                            position={[c.lat, c.lng]} 
+                            icon={L.divIcon({
+                              className: "collector-marker",
+                              html: `<div style="background-color: ${statusColor}; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${c.name.substring(0, 1).toUpperCase()}</div>`,
+                              iconSize: [30, 30],
+                              iconAnchor: [15, 15],
+                            })}
+                          >
+                            <Popup>
+                              <div className="text-xs">
+                                <p className="font-bold mb-1">{c.name}</p>
+                                <p className="text-muted-foreground italic">Worker - Ward {(c.ward || []).join(",")}</p>
+                                <p className="mt-1 text-primary/70 font-medium">Last Known Location: {lastSeenDate ? lastSeenDate.toLocaleTimeString() : 'Never'}</p>
+                              </div>
+                            </Popup>
+                          </Marker>
+                        );
+                      })}
                     </MapContainer>
                   </div>
                 </CardContent>

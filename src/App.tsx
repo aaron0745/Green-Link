@@ -12,8 +12,79 @@ import HouseholdPage from "./pages/Household";
 import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { Camera } from "@capacitor/camera";
+import { Geolocation } from "@capacitor/geolocation";
 
 const queryClient = new QueryClient();
+
+const App = () => {
+  useEffect(() => {
+    const requestInitialPermissions = async () => {
+      try {
+        console.log("[INIT] Requesting startup permissions...");
+        // Request Camera Permission
+        await Camera.requestPermissions();
+        // Request Geolocation Permission
+        await Geolocation.requestPermissions();
+      } catch (err) {
+        console.warn("[INIT] Permission request error (might be in browser):", err);
+      }
+    };
+    requestInitialPermissions();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light" storageKey="greenlink-theme" attribute="class">
+        <TooltipProvider>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+              <Routes>
+                <Route path="/" element={<Login />} />
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin', 'household']}>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/collector" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin', 'collector']}>
+                      <CollectorPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/household/:id" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin', 'collector', 'household']}>
+                      <HouseholdPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/reports" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <Reports />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) => {
   const { user, role, isLoading } = useAuth();
@@ -36,56 +107,5 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode,
 
   return <>{children}</>;
 };
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="light" storageKey="greenlink-theme" attribute="class">
-      <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <Routes>
-              <Route path="/" element={<Login />} />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute allowedRoles={['admin', 'household']}>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/collector" 
-                element={
-                  <ProtectedRoute allowedRoles={['admin', 'collector']}>
-                    <CollectorPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/household/:id" 
-                element={
-                  <ProtectedRoute allowedRoles={['admin', 'collector', 'household']}>
-                    <HouseholdPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/reports" 
-                element={
-                  <ProtectedRoute allowedRoles={['admin']}>
-                    <Reports />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
 
 export default App;
