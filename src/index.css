@@ -4,87 +4,87 @@
 
 @layer base {
   :root {
-    --background: 120 20% 98%;
-    --foreground: 150 30% 10%;
+    /* Eco-Modern Palette - Light Mode */
+    --background: 140 30% 98%;      /* Very light sage/mint tint */
+    --foreground: 152 40% 15%;      /* Dark emerald charcoal */
 
-    --card: 0 0% 100%;
-    --card-foreground: 150 30% 10%;
+    --card: 0 0% 100%;              /* Pure white cards */
+    --card-foreground: 152 40% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 150 30% 10%;
+    --popover-foreground: 152 40% 15%;
 
-    --primary: 152 55% 28%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 152 70% 28%;         /* Deep Emerald Green */
+    --primary-foreground: 140 30% 98%;
 
-    --secondary: 140 20% 94%;
-    --secondary-foreground: 150 30% 15%;
+    --secondary: 140 25% 94%;       /* Soft Sage Gray */
+    --secondary-foreground: 152 40% 20%;
 
-    --muted: 120 10% 95%;
-    --muted-foreground: 150 10% 45%;
+    --muted: 140 20% 96%;
+    --muted-foreground: 152 15% 45%;
 
-    --accent: 85 50% 50%;
+    --accent: 85 60% 55%;           /* Vibrant Leaf Green */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 84% 60%;       /* Soft Red */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 140 15% 88%;
-    --input: 140 15% 88%;
-    --ring: 152 55% 28%;
+    --border: 140 15% 90%;
+    --input: 140 15% 90%;
+    --ring: 152 60% 28%;            /* Matches primary */
 
-    --radius: 0.5rem;
+    --radius: 1rem;                 /* More rounded corners (16px) */
 
-    --sidebar-background: 150 25% 12%;
-    --sidebar-foreground: 120 15% 90%;
-    --sidebar-primary: 85 50% 55%;
+    /* Sidebar Variables */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 152 40% 20%;
+    --sidebar-primary: 152 70% 28%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 150 20% 18%;
-    --sidebar-accent-foreground: 120 15% 90%;
-    --sidebar-border: 150 15% 22%;
-    --sidebar-ring: 85 50% 55%;
-
-    --success: 152 60% 40%;
-    --warning: 38 92% 50%;
-    --info: 210 80% 55%;
+    --sidebar-accent: 140 25% 94%;
+    --sidebar-accent-foreground: 152 70% 28%;
+    --sidebar-border: 140 15% 90%;
+    --sidebar-ring: 152 70% 28%;
   }
 
   .dark {
-    --background: 150 25% 6%;
-    --foreground: 120 15% 90%;
+    /* Eco-Modern Palette - Dark Mode */
+    --background: 152 45% 5%;       /* Very dark forest green/black */
+    --foreground: 140 20% 94%;
 
-    --card: 150 20% 10%;
-    --card-foreground: 120 15% 90%;
+    --card: 152 40% 8%;             /* Dark card background */
+    --card-foreground: 140 20% 94%;
 
-    --popover: 150 20% 10%;
-    --popover-foreground: 120 15% 90%;
+    --popover: 152 40% 8%;
+    --popover-foreground: 140 20% 94%;
 
-    --primary: 152 55% 45%;
+    --primary: 152 60% 45%;         /* Brighter Emerald for dark mode */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 150 15% 18%;
-    --secondary-foreground: 120 15% 90%;
+    --secondary: 152 30% 15%;
+    --secondary-foreground: 140 20% 94%;
 
-    --muted: 150 10% 18%;
-    --muted-foreground: 120 10% 60%;
+    --muted: 152 30% 15%;
+    --muted-foreground: 140 10% 65%;
 
-    --accent: 85 50% 45%;
+    --accent: 85 50% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 150 10% 22%;
-    --input: 150 10% 22%;
-    --ring: 152 55% 45%;
+    --border: 152 30% 15%;
+    --input: 152 30% 15%;
+    --ring: 152 60% 45%;
 
-    --sidebar-background: 150 25% 8%;
-    --sidebar-foreground: 120 15% 85%;
-    --sidebar-primary: 85 50% 50%;
+    /* Sidebar Variables */
+    --sidebar-background: 152 40% 8%;
+    --sidebar-foreground: 140 20% 94%;
+    --sidebar-primary: 152 60% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 150 20% 14%;
-    --sidebar-accent-foreground: 120 15% 85%;
-    --sidebar-border: 150 15% 16%;
-    --sidebar-ring: 85 50% 50%;
+    --sidebar-accent: 152 30% 15%;
+    --sidebar-accent-foreground: 152 60% 45%;
+    --sidebar-border: 152 30% 15%;
+    --sidebar-ring: 152 60% 45%;
   }
 }
 
@@ -92,7 +92,6 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
   }

@@ -12,6 +12,16 @@ const formatIST = (date: Date) => {
     return `${year}-${month}-${day}`;
 };
 
+const isWithinLast30Days = (dateStr: string) => {
+    if (!dateStr) return false;
+    // Handle both YYYY-MM-DD and potentially other formats
+    const lastDate = new Date(dateStr);
+    const now = getISTDate();
+    const diffTime = Math.abs(now.getTime() - lastDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 30;
+};
+
 export const api = {
     async getHouseholds() {
         const response = await databases.listDocuments(
@@ -19,13 +29,12 @@ export const api = {
             HOUSEHOLDS_COLLECTION_ID,
             [Query.limit(100)]
         );
-        const today = formatIST(getISTDate());
         return response.documents.map((h: any) => {
-            const isToday = h.lastCollectionDate === today;
+            const isRecent = isWithinLast30Days(h.lastCollectionDate);
             return {
                 ...h,
-                collectionStatus: isToday ? h.collectionStatus : 'pending',
-                paymentStatus: isToday ? h.paymentStatus : 'pending'
+                collectionStatus: isRecent ? h.collectionStatus : 'pending',
+                paymentStatus: isRecent ? h.paymentStatus : 'pending'
             };
         });
     },
@@ -36,13 +45,12 @@ export const api = {
             HOUSEHOLDS_COLLECTION_ID,
             id
         );
-        const today = formatIST(getISTDate());
-        const isToday = h.lastCollectionDate === today;
+        const isRecent = isWithinLast30Days(h.lastCollectionDate);
 
         return {
             ...h,
-            collectionStatus: isToday ? h.collectionStatus : 'pending',
-            paymentStatus: isToday ? h.paymentStatus : 'pending'
+            collectionStatus: isRecent ? h.collectionStatus : 'pending',
+            paymentStatus: isRecent ? h.paymentStatus : 'pending'
         };
     },
 
@@ -55,13 +63,12 @@ export const api = {
         const h = response.documents[0];
         if (!h) return null;
         
-        const today = formatIST(getISTDate());
-        const isToday = h.lastCollectionDate === today;
+        const isRecent = isWithinLast30Days(h.lastCollectionDate);
 
         return {
             ...h,
-            collectionStatus: isToday ? h.collectionStatus : 'pending',
-            paymentStatus: isToday ? h.paymentStatus : 'pending'
+            collectionStatus: isRecent ? h.collectionStatus : 'pending',
+            paymentStatus: isRecent ? h.paymentStatus : 'pending'
         };
     },
 
@@ -74,13 +81,12 @@ export const api = {
         const h = response.documents[0];
         if (!h) return null;
         
-        const today = formatIST(getISTDate());
-        const isToday = h.lastCollectionDate === today;
+        const isRecent = isWithinLast30Days(h.lastCollectionDate);
 
         return {
             ...h,
-            collectionStatus: isToday ? h.collectionStatus : 'pending',
-            paymentStatus: isToday ? h.paymentStatus : 'pending'
+            collectionStatus: isRecent ? h.collectionStatus : 'pending',
+            paymentStatus: isRecent ? h.paymentStatus : 'pending'
         };
     },
 
@@ -267,14 +273,12 @@ export const api = {
             HOUSEHOLDS_COLLECTION_ID,
             [Query.equal('ward', ward), Query.limit(100)]
         );
-        const today = formatIST(getISTDate());
-
         return response.documents.map((h: any) => {
-            const isToday = h.lastCollectionDate === today;
+            const isRecent = isWithinLast30Days(h.lastCollectionDate);
             return {
                 ...h,
-                collectionStatus: isToday ? h.collectionStatus : 'pending',
-                paymentStatus: isToday ? h.paymentStatus : 'pending'
+                collectionStatus: isRecent ? h.collectionStatus : 'pending',
+                paymentStatus: isRecent ? h.paymentStatus : 'pending'
             };
         });
     },
@@ -352,10 +356,11 @@ export const api = {
             TRANSACTIONS_COLLECTION_ID,
             [
                 Query.equal('householdId', houseId),
-                Query.startsWith('timestamp', datePart)
+                Query.startsWith('timestamp', datePart),
+                Query.limit(1)
             ]
         );
-        return response.documents[0];
+        return response.documents[0] || null;
     },
 
     async updateHouseholdStatus(houseId: string, status: string, amount: number = 0, collectorId: string, collectorName: string, residentName: string, location: string, paymentMode?: string, paymentStatus?: string) {
@@ -385,16 +390,19 @@ export const api = {
         const existingLog = await this.getTodaysLogForHousehold(houseId);
 
         if (existingLog) {
+            // If already paid today, keep status as 'paid'
+            const newStatus = existingLog.status === 'paid' ? 'paid' : status;
+            
             await databases.updateDocument(
                 DATABASE_ID,
                 TRANSACTIONS_COLLECTION_ID,
                 existingLog.$id,
                 {
-                    collectorId,
-                    collectorName,
-                    status,
-                    amountCollected: amount,
-                    paymentMode: paymentMode || 'none'
+                    collectorId: collectorId !== 'SYSTEM' ? collectorId : existingLog.collectorId,
+                    collectorName: collectorId !== 'SYSTEM' ? collectorName : existingLog.collectorName,
+                    status: newStatus,
+                    amountCollected: Math.max(amount, existingLog.amountCollected || 0),
+                    paymentMode: (paymentMode && paymentMode !== 'none') ? paymentMode : existingLog.paymentMode
                 }
             );
         } else {
@@ -445,10 +453,7 @@ export const api = {
             }
         );
 
-        let existingLog = null;
-        try {
-            existingLog = await this.getTodaysLogForHousehold(houseId);
-        } catch (e) {}
+        const existingLog = await this.getTodaysLogForHousehold(houseId);
 
         if (existingLog) {
             return await databases.updateDocument(

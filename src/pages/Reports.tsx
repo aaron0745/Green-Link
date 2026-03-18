@@ -11,6 +11,9 @@ import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
+import { Capacitor } from "@capacitor/core";
 
 export default function Reports() {
   const [reportDate, setReportDate] = useState<Date>(new Date());
@@ -128,7 +131,7 @@ export default function Reports() {
 
   const monthlyRevenueData = getMonthlyRevenue();
 
-  const handleExport = () => {
+  const handleExport = async () => {
     const csv = [
       "House ID,Resident,Address,Status,Payment",
       ...(households || []).map(
@@ -136,13 +139,39 @@ export default function Reports() {
       ),
     ].join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `greenlink-report-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const fileName = `greenlink-report-${new Date().toISOString().split('T')[0]}.csv`;
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        // MOBILE LOGIC: Convert string to base64, save, and share
+        // Using unescape(encodeURIComponent(csv)) to handle potential UTF-8 characters safely
+        const base64Data = btoa(unescape(encodeURIComponent(csv)));
+        
+        const savedFile = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Cache,
+        });
+
+        await Share.share({
+          title: 'Green-link Collection Report',
+          text: 'Here is the exported CSV report from Green-link.',
+          url: savedFile.uri,
+          dialogTitle: 'Save or Share Report',
+        });
+      } catch (err) {
+        console.error("Mobile export failed:", err);
+      }
+    } else {
+      // DESKTOP LOGIC: Standard browser download
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   return (
