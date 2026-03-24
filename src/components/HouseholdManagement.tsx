@@ -238,12 +238,14 @@ export function HouseholdManagement() {
                               setEditingHouse(house);
                               setIsOpen(true);
                           }}
+                          aria-label={`Edit ${house.residentName}`}
+                          title={`Edit ${house.residentName}`}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" aria-label={`Delete ${house.residentName}`} title={`Delete ${house.residentName}`}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>

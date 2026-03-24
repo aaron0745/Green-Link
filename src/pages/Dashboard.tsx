@@ -471,10 +471,9 @@ export default function Dashboard() {
                       <CardContent className="p-3 sm:p-5 flex flex-col sm:flex-row items-center sm:items-start justify-between text-center sm:text-left gap-2 sm:gap-0">
                         <div className="order-2 sm:order-1">
                           <p className="text-[10px] sm:text-sm font-medium text-muted-foreground">{w.label}</p>
-                          <h3 className="text-lg sm:text-2xl font-bold mt-0.5 sm:mt-2">{w.value}</h3>
+                          <p className="text-lg sm:text-2xl font-bold mt-0.5 sm:mt-2 text-foreground">{w.value}</p>
                           <p className="text-[8px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">{w.sub}</p>
-                        </div>
-                        <div className={cn("p-2 sm:p-2.5 rounded-xl order-1 sm:order-2", w.color)}>
+                        </div>                        <div className={cn("p-2 sm:p-2.5 rounded-xl order-1 sm:order-2", w.color)}>
                           <w.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                         </div>
                       </CardContent>
@@ -496,7 +495,7 @@ export default function Dashboard() {
                          <Button 
                            variant="ghost" 
                            size="sm" 
-                           className={cn("h-7 px-2 text-[10px] rounded-lg transition-all", chartVisibility.collected ? "bg-emerald-500 text-white shadow-sm" : "text-muted-foreground opacity-50")}
+                           className={cn("h-7 px-2 text-[10px] rounded-lg transition-all", chartVisibility.collected ? "bg-emerald-600 text-white shadow-sm" : "text-muted-foreground opacity-50")}
                            onClick={() => setChartVisibility(v => ({...v, collected: !v.collected}))}
                          >
                            Collected
@@ -504,12 +503,11 @@ export default function Dashboard() {
                          <Button 
                            variant="ghost" 
                            size="sm" 
-                           className={cn("h-7 px-2 text-[10px] rounded-lg transition-all", chartVisibility.missed ? "bg-red-500 text-white shadow-sm" : "text-muted-foreground opacity-50")}
+                           className={cn("h-7 px-2 text-[10px] rounded-lg transition-all", chartVisibility.missed ? "bg-red-600 text-white shadow-sm" : "text-muted-foreground opacity-50")}
                            onClick={() => setChartVisibility(v => ({...v, missed: !v.missed}))}
                          >
                            Missed
-                         </Button>
-                         <Button 
+                         </Button>                         <Button 
                            variant="ghost" 
                            size="sm" 
                            className={cn("h-7 px-2 text-[10px] rounded-lg transition-all", chartVisibility.pending ? "bg-slate-500 text-white shadow-sm" : "text-muted-foreground opacity-50")}
@@ -600,18 +598,18 @@ export default function Dashboard() {
                            </span>
                            <span className="text-[10px] text-muted-foreground uppercase font-bold">{collectors?.length || 0} active</span>
                          </div>
-                       </div>
-                       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-emerald-100 transition-colors" onClick={handleRefreshLocations}>
+                         </div>
+                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-emerald-100 transition-colors" onClick={handleRefreshLocations} aria-label="Refresh locations" title="Refresh worker locations">
                          <RefreshCw className="h-4 w-4" />
-                       </Button>
-                     </CardHeader>
-                     <div className="flex-1 h-[250px] md:h-auto min-h-[250px] relative bg-slate-100">
-                        <MapContainer 
+                         </Button>
+                         </CardHeader>
+                         <div className="flex-1 h-[250px] md:h-auto min-h-[250px] relative bg-slate-100">
+                         <MapContainer 
                           center={[9.9312, 76.2673]} 
                           zoom={11} 
                           scrollWheelZoom={false}
                           className="h-full w-full absolute inset-0 z-0"
-                        >
+                         >
                           <MapController collectors={collectors || []} />
                           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                           {collectors?.filter((c: any) => c.lat && c.lng).map((c: any) => {
@@ -620,14 +618,15 @@ export default function Dashboard() {
                               <Marker 
                                 key={c.$id} 
                                 position={[c.lat, c.lng]}
+                                title={`Collector: ${c.name}`}
+                                alt={`Collector: ${c.name}`}
                                 icon={L.divIcon({
                                   className: "custom-pin",
-                                  html: `<div style="background-color: #10b981; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3);"></div>`,
-                                  iconSize: [12, 12],
-                                  iconAnchor: [6, 6]
+                                  html: `<div style="background-color: #10b981; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3);"></div>`,
+                                  iconSize: [24, 24],
+                                  iconAnchor: [12, 12]
                                 })}
-                              >
-                                 <Popup className="rounded-xl overflow-hidden p-0 border-none shadow-xl">
+                              >                                 <Popup className="rounded-xl overflow-hidden p-0 border-none shadow-xl">
                                    <div className="px-3 py-2 bg-slate-900 text-white min-w-[140px]">
                                      <p className="font-bold text-sm">{c.name}</p>
                                      <p className="text-xs text-slate-300">Last seen: {lastSeenDate ? format(lastSeenDate, 'h:mm a') : 'N/A'}</p>

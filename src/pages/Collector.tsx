@@ -376,6 +376,8 @@ export default function CollectorPage() {
                       size="icon" 
                       className="absolute top-2 right-2 md:top-4 md:right-4 h-8 w-8 md:h-10 md:w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all rounded-full"
                       onClick={(e) => e.stopPropagation()}
+                      aria-label={`Delete ${c.name}`}
+                      title={`Delete ${c.name}`}
                     >
                       <Trash2 className="h-4 w-4 md:h-5 md:w-5" />
                     </Button>
@@ -603,6 +605,8 @@ export default function CollectorPage() {
                               size="icon" 
                               className="absolute top-3 right-3 md:top-4 md:right-4 h-8 w-8 md:h-10 md:w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md z-30" 
                               onClick={handleCloseScanner}
+                              aria-label="Close scanner"
+                              title="Close scanner"
                             >
                               <XCircle className="h-5 w-5 md:h-6 md:w-6" />
                             </Button>

@@ -57,7 +57,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2 py-4 gap-4 flex-1 overflow-y-auto scrollbar-hide">
         {role === 'admin' && (
           <SidebarGroup>
-            <SidebarGroupLabel className="text-muted-foreground/70 text-[10px] uppercase tracking-wider font-semibold px-2 mb-2 group-data-[collapsible=icon]:hidden">
+            <SidebarGroupLabel className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold px-2 mb-2 group-data-[collapsible=icon]:hidden">
               Administration
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -93,7 +93,7 @@ export function AppSidebar() {
 
         {role === 'collector' && (
           <SidebarGroup>
-            <SidebarGroupLabel className="text-muted-foreground/70 text-[10px] uppercase tracking-wider font-semibold px-2 mb-2 group-data-[collapsible=icon]:hidden">
+            <SidebarGroupLabel className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold px-2 mb-2 group-data-[collapsible=icon]:hidden">
               Field Operations
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -113,7 +113,7 @@ export function AppSidebar() {
 
         {role === 'household' && (
           <SidebarGroup>
-            <SidebarGroupLabel className="text-muted-foreground/70 text-[10px] uppercase tracking-wider font-semibold px-2 mb-2 group-data-[collapsible=icon]:hidden">
+            <SidebarGroupLabel className="text-muted-foreground text-[10px] uppercase tracking-wider font-semibold px-2 mb-2 group-data-[collapsible=icon]:hidden">
               Resident Services
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -143,7 +143,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-4 border-t border-border/50 bg-muted/20 shrink-0 overflow-hidden">
         <div className="flex items-center gap-3 mb-4 group-data-[collapsible=icon]:justify-center">
           <Avatar className="h-9 w-9 border-2 border-background shadow-sm shrink-0">
-            <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`} />
+            <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`} alt={`${user?.name || 'User'} avatar`} />
             <AvatarFallback className="bg-primary/10 text-primary font-bold">
               {(user?.name || 'U').substring(0, 2).toUpperCase()}
             </AvatarFallback>
