@@ -89,12 +89,12 @@
 ## 🏁 Development Environment
 
 1. **Local Network Access**:
-   - The system is pre-configured to listen on `0.0.0.0:8080`.
-   - Access on mobile via: `http://<your-pc-ip>:8080`.
+   - The system is pre-configured to listen on `0.0.0.0:5173`.
+   - Access on mobile via: `http://<your-pc-ip>:5173`.
 2. **Secure Context (Scanning)**:
    - Modern browsers require **HTTPS** for camera access. For mobile testing, use an HTTPS tunnel (Ngrok/Localtunnel) or the built-in **"Simulated Scan (Dev)"** button.
 3. **Firewall**:
-   - Ensure port 8080 is open: `sudo ufw allow 8080/tcp`.
+   - Ensure port 5173 is open: `sudo ufw allow 5173/tcp`.
 
 ---
 

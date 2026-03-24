@@ -6,7 +6,7 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "0.0.0.0", // Explicitly bind to all IPv4 addresses
-    port: 8080,
+    port: 5173,
     strictPort: true,
     allowedHosts: true, // Allow all hosts for local network testing
     cors: true,
@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => ({
   },
   preview: {
     host: "0.0.0.0",
-    port: 8080,
+    port: 5173,
     allowedHosts: true,
   },
   plugins: [react()].filter(Boolean),
