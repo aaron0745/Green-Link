@@ -48,6 +48,7 @@ const staggerContainer = {
 
 export default function CollectorPage() {
   const { user, role } = useAuth();
+  const isAdmin = role === 'admin';
   
   // IST Date Helpers
   const getISTDate = () => {
@@ -327,15 +328,14 @@ export default function CollectorPage() {
           variants={staggerContainer}
           className="p-4 md:p-6 space-y-6 md:space-y-10 max-w-6xl mx-auto"
         >
-          <motion.div variants={fadeInUp} className="flex flex-col gap-1 md:gap-2">
-            <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-foreground">Field Personnel</h1>
-            <p className="text-muted-foreground text-sm md:text-lg">Manage and monitor your workforce in real-time.</p>
-          </motion.div>
-
-          <motion.div variants={fadeInUp}>
-            <Card className="border-none shadow-none bg-transparent overflow-hidden">
+          <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 md:gap-6">
+            <div className="flex flex-col gap-1 md:gap-2">
+              <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-foreground">Field Personnel</h1>
+              <p className="text-muted-foreground text-sm md:text-lg">Manage and monitor your workforce in real-time.</p>
+            </div>
+            <div className="shrink-0">
                <CollectorManagement />
-            </Card>
+            </div>
           </motion.div>
 
           <motion.div 
@@ -352,7 +352,7 @@ export default function CollectorPage() {
                 <Button
                   variant="outline"
                   className="w-full h-auto p-6 md:p-8 flex flex-col items-center text-center gap-4 md:gap-5 border-border/60 hover:border-primary/50 hover:bg-primary/5 hover:shadow-2xl transition-all rounded-[1.5rem] md:rounded-[2.5rem] bg-card overflow-hidden"
-                  onClick={() => setSelectedCollectorId(c.$id)}
+                  onClick={() => navigate(`/collectordetails`, { state: { id: c.$id } })}
                 >
                   <div className="h-16 w-16 md:h-24 md:w-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-xl md:text-3xl font-black text-primary shadow-inner group-hover:scale-110 transition-transform duration-500">
                     {c.avatar || c.name.substring(0,2).toUpperCase()}

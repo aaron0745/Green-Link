@@ -222,7 +222,7 @@ export default function Dashboard() {
     const totalHouses = households.length;
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date();
+      const d = new Date(selectedDate);
       d.setDate(d.getDate() - (6 - i));
       const day = d.getDate().toString().padStart(2, '0');
       const month = (d.getMonth() + 1).toString().padStart(2, '0');
@@ -541,9 +541,45 @@ export default function Dashboard() {
                              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} dy={10} />
                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
                              <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', fontSize: '10px' }} />
-                             {chartVisibility.collected && <Area type="monotone" dataKey="collected" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorCollected)" />}
-                             {chartVisibility.missed && <Area type="monotone" dataKey="missed" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorMissed)" />}
-                             {chartVisibility.pending && <Area type="monotone" dataKey="pending" stroke="#64748b" strokeWidth={2} fillOpacity={1} fill="url(#colorPending)" />}
+                             {chartVisibility.collected && (
+                               <Area 
+                                 type="monotone" 
+                                 dataKey="collected" 
+                                 stroke="#10b981" 
+                                 strokeWidth={2} 
+                                 fillOpacity={1} 
+                                 fill="url(#colorCollected)" 
+                                 isAnimationActive={true}
+                                 animationDuration={1500}
+                                 animationEasing="ease-in-out"
+                               />
+                             )}
+                             {chartVisibility.missed && (
+                               <Area 
+                                 type="monotone" 
+                                 dataKey="missed" 
+                                 stroke="#ef4444" 
+                                 strokeWidth={2} 
+                                 fillOpacity={1} 
+                                 fill="url(#colorMissed)" 
+                                 isAnimationActive={true}
+                                 animationDuration={1500}
+                                 animationEasing="ease-in-out"
+                               />
+                             )}
+                             {chartVisibility.pending && (
+                               <Area 
+                                 type="monotone" 
+                                 dataKey="pending" 
+                                 stroke="#64748b" 
+                                 strokeWidth={2} 
+                                 fillOpacity={1} 
+                                 fill="url(#colorPending)" 
+                                 isAnimationActive={true}
+                                 animationDuration={1500}
+                                 animationEasing="ease-in-out"
+                               />
+                             )}
                            </AreaChart>
                          </ResponsiveContainer>
                        </div>

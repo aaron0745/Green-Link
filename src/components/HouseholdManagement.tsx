@@ -145,27 +145,27 @@ export function HouseholdManagement() {
             <form onSubmit={handleSubmit} className="space-y-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">Name</Label>
-                <Input id="name" name="name" defaultValue={editingHouse?.residentName} className="col-span-3" required />
+                <Input id="name" name="name" placeholder="e.g. John Doe" defaultValue={editingHouse?.residentName} className="col-span-3" required />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="email" className="text-right">Email</Label>
-                <Input id="email" name="email" type="email" defaultValue={editingHouse?.email} className="col-span-3" required />
+                <Input id="email" name="email" type="email" placeholder="e.g. john@example.com" defaultValue={editingHouse?.email} className="col-span-3" required />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="password" className="text-right">Password</Label>
-                <Input id="password" name="password" type="password" defaultValue={editingHouse?.password} className="col-span-3" required />
+                <Input id="password" name="password" type="password" placeholder="Set login password" defaultValue={editingHouse?.password} className="col-span-3" required />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="address" className="text-right">Address</Label>
-                <Input id="address" name="address" defaultValue={editingHouse?.address} className="col-span-3" required />
+                <Input id="address" name="address" placeholder="address, ward" defaultValue={editingHouse?.address} className="col-span-3" required />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="phone" className="text-right">Phone</Label>
-                <Input id="phone" name="phone" defaultValue={editingHouse?.phone} className="col-span-3" required />
+                <Input id="phone" name="phone" placeholder="e.g. 98470XXXXX" defaultValue={editingHouse?.phone} className="col-span-3" required />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="ward" className="text-right">Ward</Label>
-                <Input id="ward" name="ward" type="number" defaultValue={editingHouse?.ward} className="col-span-3" required />
+                <Input id="ward" name="ward" type="number" placeholder="e.g. 1" defaultValue={editingHouse?.ward} className="col-span-3" required />
               </div>
               {editingHouse && (
                 <div className="grid grid-cols-4 items-center gap-4">

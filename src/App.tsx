@@ -8,6 +8,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import CollectorPage from "./pages/Collector";
+import CollectorDetails from "./pages/CollectorDetails";
 import HouseholdPage from "./pages/Household";
 import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
@@ -58,6 +59,14 @@ const App = () => {
                   element={
                     <ProtectedRoute allowedRoles={['admin', 'collector']}>
                       <CollectorPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/collectordetails" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <CollectorDetails />
                     </ProtectedRoute>
                   } 
                 />

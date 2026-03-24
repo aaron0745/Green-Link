@@ -8,7 +8,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const isOpen = isMobile ? openMobile : open;
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-background relative">
+    <div className="flex-1 flex flex-col min-h-screen bg-background relative overflow-x-hidden w-full">
       <header className="h-16 border-b border-border/40 flex items-center justify-between px-4 lg:px-6 bg-card/50 backdrop-blur-sm sticky top-0 z-50 print:hidden">
         <div className="flex items-center gap-3">
           <SidebarTrigger />

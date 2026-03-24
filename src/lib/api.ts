@@ -124,6 +124,14 @@ export const api = {
         return response.documents;
     },
 
+    async getCollector(id: string) {
+        return await databases.getDocument(
+            DATABASE_ID,
+            COLLECTORS_COLLECTION_ID,
+            id
+        );
+    },
+
     async getCollectorByEmail(email: string) {
         const response = await databases.listDocuments(
             DATABASE_ID,
@@ -241,6 +249,15 @@ export const api = {
         );
     },
 
+    async updateCollector(id: string, data: any) {
+        return await databases.updateDocument(
+            DATABASE_ID,
+            COLLECTORS_COLLECTION_ID,
+            id,
+            data
+        );
+    },
+
     async deleteCollector(id: string) {
         return await databases.deleteDocument(
             DATABASE_ID,
@@ -344,7 +361,7 @@ export const api = {
         const response = await databases.listDocuments(
             DATABASE_ID,
             TRANSACTIONS_COLLECTION_ID,
-            [Query.orderDesc('timestamp'), Query.limit(100)]
+            [Query.orderDesc('timestamp'), Query.limit(1000)]
         );
         return response.documents;
     },
