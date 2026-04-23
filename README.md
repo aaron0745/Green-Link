@@ -98,4 +98,4 @@
 
 ---
 
-© 2026 **Green-link Digital Initiative** — Transforming waste management for a cleaner, smarter future.
+© 2026 **Green-link Digital Initiative** — Transforming waste management for a cleaner, smarter and a bright future.
