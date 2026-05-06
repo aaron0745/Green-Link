@@ -43,6 +43,7 @@ export function CollectorManagement({ editingCollector, onClose }: CollectorMana
       queryClient.invalidateQueries({ queryKey: ['collectors'] });
       setIsOpen(false);
       toast({ title: "Success", description: "Collector added to database." });
+      setTimeout(() => window.location.reload(), 1000);
     },
     onError: (error: any) => {
       toast({ variant: "destructive", title: "Error", description: error.message });
@@ -56,6 +57,7 @@ export function CollectorManagement({ editingCollector, onClose }: CollectorMana
       setIsOpen(false);
       if (onClose) onClose();
       toast({ title: "Success", description: "Collector updated successfully." });
+      setTimeout(() => window.location.reload(), 1000);
     },
     onError: (error: any) => {
       toast({ variant: "destructive", title: "Error", description: error.message });

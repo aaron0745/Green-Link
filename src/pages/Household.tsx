@@ -7,6 +7,7 @@ import { CheckCircle2, Home, User, Calendar, IndianRupee, Printer, ArrowLeft, Lo
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { formatDisplayDate } from "@/lib/date-utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useRef } from "react";
 import jsPDF from "jspdf";
@@ -125,7 +126,7 @@ export default function HouseholdPage() {
                 </div>
                 <div className="space-y-1">
                   <p className="text-muted-foreground text-[10px] sm:text-xs uppercase font-bold tracking-wider">Last Collection</p>
-                  <p className="font-semibold text-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-primary/60" />{(house as any).lastCollectionDate || "—"}</p>
+                  <p className="font-semibold text-foreground flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-primary/60" />{formatDisplayDate((house as any).lastCollectionDate)}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-muted-foreground text-[10px] sm:text-xs uppercase font-bold tracking-wider">Payment Status</p>
@@ -149,7 +150,7 @@ export default function HouseholdPage() {
                 <div className="bg-primary/5 rounded-2xl p-4 space-y-3 border border-primary/10 shadow-inner">
                   <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-muted-foreground">Date</span>
-                    <span className="font-bold text-foreground">{(house as any).lastCollectionDate || new Date().toLocaleDateString()}</span>
+                    <span className="font-bold text-foreground">{formatDisplayDate((house as any).lastCollectionDate)}</span>
                   </div>
                   <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-muted-foreground">Collector</span>
@@ -203,7 +204,7 @@ export default function HouseholdPage() {
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Collection Date</p>
-                  <p className="font-bold text-slate-800">{(house as any).lastCollectionDate || "Verified Date"}</p>
+                  <p className="font-bold text-slate-800">{formatDisplayDate((house as any).lastCollectionDate)}</p>
                   <p className="text-sm text-slate-600">Ward: {(house as any).ward}</p>
                 </div>
               </div>
@@ -252,7 +253,7 @@ export default function HouseholdPage() {
               </div>
               <div className="text-right">
                 <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Collection Date</p>
-                <p className="font-bold text-slate-800">{(house as any).lastCollectionDate || "Verified Date"}</p>
+                <p className="font-bold text-slate-800">{formatDisplayDate((house as any).lastCollectionDate)}</p>
                 <p className="text-sm text-slate-600">Ward: {(house as any).ward}</p>
               </div>
             </div>

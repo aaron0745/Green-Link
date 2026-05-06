@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ScanLine, CheckCircle2, XCircle, LogIn, MapPin, Clock, User, Users, Loader2, Banknote, CreditCard, Camera, ClipboardList, ChevronRight, Phone, Sparkles } from "lucide-react";
+import { ScanLine, CheckCircle2, XCircle, LogIn, MapPin, Clock, User, Users, Loader2, Banknote, CreditCard, Camera, ClipboardList, ChevronRight, Phone, Sparkles, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { getISTDateString, formatDisplayTime, formatDisplayDate } from "@/lib/date-utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { Capacitor } from "@capacitor/core";
 import {
   Dialog,
   DialogContent,
@@ -49,22 +51,11 @@ const staggerContainer = {
 export default function CollectorPage() {
   const { user, role } = useAuth();
   const isAdmin = role === 'admin';
-  
-  // IST Date Helpers
-  const getISTDate = () => {
-    return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-  };
 
-  const formatIST = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  const todayIST = formatIST(getISTDate());
+  const todayIST = getISTDateString();
 
   const [scanning, setScanning] = useState<boolean>(false);
+
   const [activelyScanningHouseId, setActivelyScanningHouseId] = useState<string | null>(null);
   const [scannedHouseId, setScannedHouseId] = useState<string | null>(null);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -119,6 +110,7 @@ export default function CollectorPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['collectors'] });
       toast({ title: "Success", description: "Collector removed from database." });
+      setTimeout(() => window.location.reload(), 1000);
     }
   });
 
@@ -205,20 +197,26 @@ export default function CollectorPage() {
         return result;
     },
     enabled: !!selectedCollectorId,
-    refetchInterval: 10000, 
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchInterval: Capacitor.isNativePlatform() ? 5000 : false
   });
 
   const { data: allActiveRoutes } = useQuery({
     queryKey: ['allRoutesToday', todayIST],
     queryFn: () => api.getRoutesByDate(todayIST),
-    refetchInterval: 10000,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchInterval: Capacitor.isNativePlatform() ? 5000 : false
   });
 
   const { data: assignedHousesRaw, isLoading: householdsLoading } = useQuery({
     queryKey: ['myHouseholds', todayRoute?.ward],
     queryFn: () => todayRoute ? api.getHouseholdsByWard(todayRoute.ward) : Promise.resolve([]),
     enabled: !!todayRoute,
-    refetchInterval: 10000, 
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchInterval: Capacitor.isNativePlatform() ? 5000 : false
   });
 
   const assignedHouses = assignedHousesRaw || [];
@@ -242,7 +240,6 @@ export default function CollectorPage() {
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       setScannedHouseId(null); 
       setPaymentDialogOpen(false);
-      window.location.reload(); 
     }
   });
 
@@ -491,11 +488,19 @@ export default function CollectorPage() {
                 <MapPin className="h-3 w-3 md:h-4 md:w-4 shrink-0" /> Wards {(collector?.ward || []).join(", ")}
               </motion.p>
             </div>
-            {role === 'admin' && (
-              <Button variant="secondary" size="sm" className="h-8 md:h-10 rounded-xl md:rounded-2xl bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-md px-3 md:px-4 font-bold text-xs md:text-sm" onClick={() => setSelectedCollectorId(null)}>
-                Switch
+            <div className="flex flex-col gap-2 items-end">
+              <Button variant="secondary" size="sm" className="h-8 md:h-10 rounded-xl md:rounded-2xl bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-md px-3 md:px-4 font-bold text-xs md:text-sm gap-2" onClick={() => {
+                queryClient.clear();
+                window.location.replace(window.location.href);
+              }} title="Refresh Data">
+                <RefreshCw className="h-3 w-3 md:h-4 md:w-4" /> Refresh
               </Button>
-            )}
+              {role === 'admin' && (
+                <Button variant="secondary" size="sm" className="h-8 md:h-10 rounded-xl md:rounded-2xl bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-md px-3 md:px-4 font-bold text-xs md:text-sm" onClick={() => setSelectedCollectorId(null)}>
+                  Switch
+                </Button>
+              )}
+            </div>
           </div>
         </motion.div>
 
@@ -583,9 +588,10 @@ export default function CollectorPage() {
                               animate={{ opacity: 1, x: 0 }}
                               className="text-[9px] md:text-[10px] text-emerald-600 font-black flex items-center gap-1 md:gap-1.5 mt-2 md:mt-3 uppercase tracking-wider"
                             >
-                              <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4" /> Logged at {house.lastCollectionDate}
+                              <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4" /> Logged at {formatDisplayDate(house.lastCollectionDate)}
                             </motion.p>
                           )}
+
                         </div>
                       </div>
 

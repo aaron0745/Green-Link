@@ -12,7 +12,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
+import { formatDisplayTime, formatDisplayDate, parseDate } from "@/lib/date-utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -108,8 +109,7 @@ export default function Dashboard() {
   const { data: currentResident, isLoading: residentLoading } = useQuery({
     queryKey: ['resident', user?.$id],
     queryFn: () => api.getHousehold(user?.$id),
-    enabled: isHousehold && !!user?.$id,
-    refetchInterval: 5000,
+    enabled: isHousehold && !!user?.$id
   });
 
   const { data: collectionLogs, isLoading: logsLoading } = useQuery({
@@ -120,8 +120,7 @@ export default function Dashboard() {
   const { data: collectors, refetch: refetchCollectors } = useQuery({
     queryKey: ['collectors'],
     queryFn: () => api.getCollectors(),
-    enabled: isAdmin,
-    refetchInterval: 10000,
+    enabled: isAdmin
   });
 
   const { data: dailyRoutes } = useQuery({
@@ -140,6 +139,9 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ['routes', dateStr] });
       queryClient.invalidateQueries({ queryKey: ['households'] });
       toast({ title: "Route Assigned", description: "Collector assigned successfully." });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     }
   });
 
@@ -150,6 +152,9 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ['routes', dateStr] });
       queryClient.invalidateQueries({ queryKey: ['households'] });
       toast({ title: "Assignment Reset", description: "Route has been cleared and ward set to unassigned." });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     }
   });
 
@@ -160,6 +165,7 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ['households'] });
       queryClient.invalidateQueries({ queryKey: ['resident', user?.$id] });
       toast({ title: "Payment Successful", description: "Your payment has been logged." });
+      setTimeout(() => window.location.reload(), 1000);
     },
     onError: (error: any) => {
       toast({ variant: "destructive", title: "Payment Failed", description: error.message });
@@ -238,17 +244,9 @@ export default function Dashboard() {
 
     collectionLogs?.forEach((log: any) => {
       if (!log.timestamp) return;
-      const rawDate = log.timestamp.split(',')[0].split(' ')[0];
-      let formattedLogDate = rawDate;
-      if (rawDate.includes('/')) {
-        const parts = rawDate.split('/');
-        if (parts.length === 3) {
-          const d = parts[0].padStart(2, '0');
-          const m = parts[1].padStart(2, '0');
-          const y = parts[2].trim();
-          formattedLogDate = `${y}-${m}-${d}`;
-        }
-      }
+      const date = parseDate(log.timestamp);
+      if (!isValid(date)) return;
+      const formattedLogDate = format(date, 'yyyy-MM-dd');
 
       const dayData = last7Days.find(d => d.dateStr === formattedLogDate);
       if (dayData) {
@@ -378,7 +376,7 @@ export default function Dashboard() {
                       <TableBody>
                         {myLogs.map((log: any) => (
                           <TableRow key={log.$id} className="hover:bg-muted/30">
-                            <TableCell className="font-medium">{log.timestamp}</TableCell>
+                            <TableCell className="font-medium">{formatDisplayDateTime(log.timestamp)}</TableCell>
                             <TableCell>{log.collectorName}</TableCell>
                             <TableCell>
                               <Badge variant="outline" className={statusColors[log.status]}>
@@ -613,9 +611,9 @@ export default function Dashboard() {
                           <MapController collectors={collectors || []} />
                           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                           {collectors?.filter((c: any) => c.lat && c.lng).map((c: any) => {
-                            const lastSeenDate = c.lastSeen ? new Date(c.lastSeen) : null;
                             return (
-                              <Marker 
+                              <Marker
+ 
                                 key={c.$id} 
                                 position={[c.lat, c.lng]}
                                 title={`Collector: ${c.name}`}
@@ -629,8 +627,9 @@ export default function Dashboard() {
                               >                                 <Popup className="rounded-xl overflow-hidden p-0 border-none shadow-xl">
                                    <div className="px-3 py-2 bg-slate-900 text-white min-w-[140px]">
                                      <p className="font-bold text-sm">{c.name}</p>
-                                     <p className="text-xs text-slate-300">Last seen: {lastSeenDate ? format(lastSeenDate, 'h:mm a') : 'N/A'}</p>
+                                     <p className="text-xs text-slate-300">Last seen: {formatDisplayTime(c.lastSeen)}</p>
                                    </div>
+
                                  </Popup>
                               </Marker>
                             );
@@ -703,7 +702,7 @@ export default function Dashboard() {
                              </TableCell>
                              <TableCell className="text-sm text-muted-foreground">{log.collectorName}</TableCell>
                              <TableCell className="text-sm font-mono text-muted-foreground">
-                               {log.timestamp.split(',')[1]?.trim()}
+                               {formatDisplayTime(log.timestamp)}
                              </TableCell>
                              <TableCell>
                                <Badge variant="outline" className={cn("capitalize font-normal", statusColors[log.status] || statusColors['pending'])}>
@@ -729,7 +728,7 @@ export default function Dashboard() {
                               <div>
                                 <h4 className="font-bold text-sm text-foreground leading-none">{log.residentName}</h4>
                                 <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                                  <Clock className="h-3 w-3" /> {log.timestamp.split(',')[1]?.trim() || log.timestamp}
+                                  <Clock className="h-3 w-3" /> {formatDisplayTime(log.timestamp)}
                                 </p>
                               </div>
                             </div>

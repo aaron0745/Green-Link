@@ -7,7 +7,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Download, AlertTriangle, TrendingUp, Percent, Loader2, Calendar as CalendarIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
+import { parseDate } from "@/lib/date-utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -51,11 +52,11 @@ export default function Reports() {
 
   const getTodaysStats = () => {
     if (!households || !collectionLogs) return { total: 0, covered: 0 };
-    const dateStrISO = reportDate.toISOString().split('T')[0];
+    const dateStr = format(reportDate, "yyyy-MM-dd");
     const dateStrLocal = reportDate.toLocaleDateString('en-GB');
     const dateStrAlternative = format(reportDate, "d/M/yyyy");
     const dailyLogs = collectionLogs.filter((l: any) => 
-        l.timestamp && (l.timestamp.startsWith(dateStrISO) || l.timestamp.startsWith(dateStrLocal) || l.timestamp.includes(dateStrAlternative))
+        l.timestamp && (l.timestamp.startsWith(dateStr) || l.timestamp.startsWith(dateStrLocal) || l.timestamp.includes(dateStrAlternative))
     );
     const coveredIds = new Set(dailyLogs.filter((l: any) => {
         const s = (l.status || '').toLowerCase();
@@ -67,11 +68,11 @@ export default function Reports() {
   const stats = getTodaysStats();
   const coveragePercent = stats.total > 0 ? Math.round((stats.covered / stats.total) * 100) : 0;
   const missedHouses = (households || []).filter((h: any) => {
-    const dateStrISO = reportDate.toISOString().split('T')[0];
+    const dateStr = format(reportDate, "yyyy-MM-dd");
     const dateStrLocal = reportDate.toLocaleDateString('en-GB');
     const dateStrAlternative = format(reportDate, "d/M/yyyy");
     const hasLog = collectionLogs?.some((l: any) => 
-        l.householdId === h.$id && l.timestamp && (l.timestamp.startsWith(dateStrISO) || l.timestamp.startsWith(dateStrLocal) || l.timestamp.includes(dateStrAlternative))
+        l.householdId === h.$id && l.timestamp && (l.timestamp.startsWith(dateStr) || l.timestamp.startsWith(dateStrLocal) || l.timestamp.includes(dateStrAlternative))
     );
     return !hasLog;
   });
@@ -87,14 +88,8 @@ export default function Reports() {
     collectionLogs?.forEach((log: any) => {
       if (log.status === 'collected' || log.status === 'paid') {
         if (!log.timestamp) return;
-        const rawDate = log.timestamp.split(',')[0].split(' ')[0];
-        let date: Date;
-        if (rawDate.includes('/')) {
-          const parts = rawDate.split('/');
-          date = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-        } else {
-          date = new Date(rawDate);
-        }
+        const date = parseDate(log.timestamp);
+        if (!isValid(date)) return;
         const monthName = months[date.getMonth()];
         if (revenueMap[monthName] !== undefined) revenueMap[monthName] += log.amountCollected || 0;
       }
@@ -105,8 +100,21 @@ export default function Reports() {
   const monthlyRevenueData = getMonthlyRevenue();
 
   const handleExport = async () => {
-    const csv = ["House ID,Resident,Address,Status,Payment", ...(households || []).map((h: any) => `${h.$id},${h.residentName},${h.address},${h.collectionStatus},${h.paymentStatus}`)].join("\n");
-    const fileName = `greenlink-report-${new Date().toISOString().split('T')[0]}.csv`;
+    const dateStr = format(reportDate, "yyyy-MM-dd");
+    const dateStrLocal = reportDate.toLocaleDateString('en-GB');
+    const dateStrAlternative = format(reportDate, "d/M/yyyy");
+    
+    const dailyLogs = (collectionLogs || []).filter((l: any) => 
+      l.timestamp && (l.timestamp.startsWith(dateStr) || l.timestamp.startsWith(dateStrLocal) || l.timestamp.includes(dateStrAlternative))
+    );
+
+    const reportData = (households || []).map((h: any) => {
+      const log = dailyLogs.find((l: any) => l.householdId === h.$id);
+      return `${h.$id},${h.residentName},${h.address.replace(/,/g, ' ')},${log ? log.status : 'Pending'},${log && (log.status === 'paid' || log.status === 'collected') ? 'Paid' : 'Unpaid'}`;
+    });
+
+    const csv = ["House ID,Resident,Address,Status,Payment", ...reportData].join("\n");
+    const fileName = `greenlink-report-${dateStr}.csv`;
     if (Capacitor.isNativePlatform()) {
       try {
         const base64Data = btoa(unescape(encodeURIComponent(csv)));

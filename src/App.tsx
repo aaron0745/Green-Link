@@ -9,6 +9,8 @@ import { Loader2 } from "lucide-react";
 import { useEffect, lazy, Suspense } from "react";
 import { Camera } from "@capacitor/camera";
 import { Geolocation } from "@capacitor/geolocation";
+import { Capacitor } from "@capacitor/core";
+import { client, DATABASE_ID, HOUSEHOLDS_COLLECTION_ID, COLLECTORS_COLLECTION_ID, ROUTES_COLLECTION_ID, TRANSACTIONS_COLLECTION_ID } from "@/lib/appwrite";
 
 // Lazy load route components for code splitting (Performance Optimization)
 const Login = lazy(() => import("./pages/Login"));
@@ -40,6 +42,25 @@ const App = () => {
       }
     };
     requestInitialPermissions();
+
+    // Global Realtime Synchronization
+    // Listens to all relevant collections and forces all active devices to fetch the latest data instantly
+    const channels = [
+      `databases.${DATABASE_ID}.collections.${HOUSEHOLDS_COLLECTION_ID}.documents`,
+      `databases.${DATABASE_ID}.collections.${COLLECTORS_COLLECTION_ID}.documents`,
+      `databases.${DATABASE_ID}.collections.${ROUTES_COLLECTION_ID}.documents`,
+      `databases.${DATABASE_ID}.collections.${TRANSACTIONS_COLLECTION_ID}.documents`
+    ];
+
+    const unsubscribe = client.subscribe(channels, (response) => {
+      console.log("[REALTIME] Database change detected globally:", response);
+      // Invalidate all React Query caches
+      queryClient.invalidateQueries();
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return (

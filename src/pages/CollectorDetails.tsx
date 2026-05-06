@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { formatDisplayDate } from "@/lib/date-utils";
 import { 
   User, 
   Mail, 
@@ -83,6 +84,7 @@ export default function CollectorDetails() {
       queryClient.invalidateQueries({ queryKey: ['collector', id] });
       queryClient.invalidateQueries({ queryKey: ['collectors'] });
       toast({ title: "Success", description: "Personnel record updated." });
+      setTimeout(() => window.location.reload(), 1000);
     },
     onError: (err: any) => {
       toast({ variant: "destructive", title: "Update Failed", description: err.message });
@@ -95,6 +97,7 @@ export default function CollectorDetails() {
       queryClient.invalidateQueries({ queryKey: ['collectors'] });
       toast({ title: "Success", description: "Personnel record deleted permanently." });
       navigate("/collector");
+      setTimeout(() => window.location.reload(), 500);
     },
     onError: (err: any) => {
       toast({ variant: "destructive", title: "Deletion Failed", description: err.message });
@@ -182,7 +185,7 @@ export default function CollectorDetails() {
                   <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 uppercase font-bold text-[10px]">
                     {collector.status || "Active"}
                   </Badge>
-                  <span className="text-sm font-medium">Joined: {new Date(collector.$createdAt).toLocaleDateString()}</span>
+                  <span className="text-sm font-medium">Joined: {formatDisplayDate(collector.$createdAt)}</span>
                 </div>
               </div>
             </div>
@@ -255,7 +258,7 @@ export default function CollectorDetails() {
                   </div>
                   <div>
                     <p className="text-[10px] text-muted-foreground uppercase font-black">Last Active</p>
-                    <p className="text-sm font-bold">{collector.lastSeen ? new Date(collector.lastSeen).toLocaleDateString() : 'Never'}</p>
+                    <p className="text-sm font-bold">{collector.lastSeen ? formatDisplayDate(collector.lastSeen) : 'Never'}</p>
                   </div>
                 </div>
               </CardContent>

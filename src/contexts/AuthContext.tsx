@@ -55,20 +55,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (type: 'admin' | 'collector' | 'household', identifier: string, password?: string) => {
     setIsLoading(true);
+    console.log(`[AUTH] Login started. Type: ${type}, ID: ${identifier}`);
+    
+    // Clear any stale local data
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userData');
+    
     try {
       let activeUser = null;
       if (type === 'admin' || type === 'collector') {
         try {
-            // Attempt standard Appwrite Auth first
+            console.log('[AUTH] Step 1: Cleaning existing sessions...');
             try {
                 await account.deleteSession('current');
-            } catch (e) {}
+            } catch (e) {
+                console.log('[AUTH] No session to clear.');
+            }
             
-            await account.createEmailPasswordSession(identifier, password!);
+            console.log('[AUTH] Step 2: Requesting session creation from Appwrite...');
+            const session = await account.createEmailPasswordSession(identifier, password!);
+            console.log('[AUTH] Session created:', session.$id);
+            
+            // Small artificial delay to allow browser to settle cookies
+            await new Promise(res => setTimeout(res, 500));
+            
+            console.log('[AUTH] Step 3: Verifying account via account.get()...');
             activeUser = await account.get();
-        } catch (authError) {
-            // Fallback: Check Database for the user if it's a Collector
+            console.log('[AUTH] Verification successful:', activeUser.email);
+        } catch (authError: any) {
+            console.error('[AUTH] Detailed Appwrite Error:', {
+                message: authError.message,
+                code: authError.code,
+                type: authError.type,
+                version: authError.version
+            });
+            
+            // Fallback for Collectors
             if (type === 'collector') {
+                console.log('[AUTH] Attempting DB fallback for collector...');
                 const collector = await api.getCollectorByEmail(identifier);
                 if (collector && collector.password === password) {
                     activeUser = collector;
@@ -80,14 +104,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         }
         
-        setUser(activeUser);
-        setRole(type);
-        localStorage.setItem('userRole', type);
-        localStorage.setItem('userData', JSON.stringify(activeUser));
+        if (activeUser) {
+          setUser(activeUser);
+          setRole(type);
+          localStorage.setItem('userRole', type);
+          localStorage.setItem('userData', JSON.stringify(activeUser));
+        }
       } else if (type === 'household') {
-        // Find household by email
         const household = await api.getHouseholdByEmail(identifier);
-        if (!household) throw new Error('Household not found with this email address');
+        if (!household) throw new Error('Household not found');
         if (household.password !== password) throw new Error('Invalid password');
         
         setUser(household);
@@ -96,6 +121,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('userData', JSON.stringify(household));
       }
     } catch (error: any) {
+      // Clear state on failure
+      setUser(null);
+      setRole(null);
       throw error;
     } finally {
       setIsLoading(false);
@@ -105,7 +133,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       await account.deleteSession('current');
-    } catch (e) {}
+    } catch (e) {
+      console.error("Session delete error:", e);
+    }
     setUser(null);
     setRole(null);
     localStorage.removeItem('userRole');

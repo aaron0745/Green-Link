@@ -1,26 +1,6 @@
 import { databases, DATABASE_ID, HOUSEHOLDS_COLLECTION_ID, ROUTES_COLLECTION_ID, TRANSACTIONS_COLLECTION_ID, COLLECTORS_COLLECTION_ID, teams, functions, FUNCTION_OTP_ID } from './appwrite';
 import { Query, ID, ExecutionMethod } from 'appwrite';
-
-const getISTDate = () => {
-    return new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
-};
-
-const formatIST = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-
-const isWithinLast30Days = (dateStr: string) => {
-    if (!dateStr) return false;
-    // Handle both YYYY-MM-DD and potentially other formats
-    const lastDate = new Date(dateStr);
-    const now = getISTDate();
-    const diffTime = Math.abs(now.getTime() - lastDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 30;
-};
+import { getISTDateString, getISTTimeString, isWithinLast30Days } from './date-utils';
 
 export const api = {
     async getHouseholds() {
@@ -367,7 +347,7 @@ export const api = {
     },
 
     async getTodaysLogForHousehold(houseId: string) {
-        const datePart = formatIST(getISTDate());
+        const datePart = getISTDateString();
         const response = await databases.listDocuments(
             DATABASE_ID,
             TRANSACTIONS_COLLECTION_ID,
@@ -381,9 +361,8 @@ export const api = {
     },
 
     async updateHouseholdStatus(houseId: string, status: string, amount: number = 0, collectorId: string, collectorName: string, residentName: string, location: string, paymentMode?: string, paymentStatus?: string) {
-        const now = getISTDate();
-        const dateStr = formatIST(now);
-        const timeStr = now.toLocaleTimeString("en-US", { hour12: false });
+        const dateStr = getISTDateString();
+        const timeStr = getISTTimeString();
 
         const updateData: any = { 
             collectionStatus: status,
@@ -450,14 +429,15 @@ export const api = {
                     collectorId,
                     { totalCollections: (collector.totalCollections || 0) + 1 }
                 );
-            } catch (e) {}
+            } catch (e) {
+                console.error("Failed to update collector count:", e);
+            }
         }
     },
 
     async payOnline(houseId: string, residentName: string, amount: number) {
-        const now = getISTDate();
-        const dateStr = formatIST(now);
-        const timeStr = now.toLocaleTimeString("en-US", { hour12: false });
+        const dateStr = getISTDateString();
+        const timeStr = getISTTimeString();
 
         await databases.updateDocument(
             DATABASE_ID,
