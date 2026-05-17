@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
 import { format, isValid } from "date-fns";
-import { formatDisplayTime, formatDisplayDate, parseDate } from "@/lib/date-utils";
+import { formatDisplayTime, formatDisplayDate, parseDate, formatDisplayDateTime } from "@/lib/date-utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
